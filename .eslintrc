@@ -6,6 +6,7 @@
   "env": {
     "node": true
   },
+  "ignorePatterns": "local.settings.invalid.json",
   "overrides": [
     {
       "files": [
