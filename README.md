@@ -10,12 +10,12 @@ npm install --save azure-env-safe
 
 ## Why
 
-Inspired by [dotenv-safe](https://www.npmjs.com/package/dotenv-safe), it's a good practice to keep your config separate from your application. It is also a good practice to fail early and with good error messages to help debugging. This approach will help you avoid having random error messages from appearing because an environment variable is missing and only finding it at runtime once your application is deployed. 
+Inspired by [dotenv-safe](https://www.npmjs.com/package/dotenv-safe), it's a good practice to keep your config separate from your application. It is also a good practice to fail early and with good error messages to help debugging. This approach will help you avoid having random error messages from appearing because an environment variable is missing and only finding it at runtime once your application is deployed. [dotenv-safe](https://www.npmjs.com/package/dotenv-safe) requires a `.env.example` file, so if you were to use it with an azure function, then you would have both a `local.settings.example.json` and a `.env.example` where your env variables could go. Rather than having a confusing situation like that with 2 example files, this repo just uses your `local.settings.example.json` file the same way that dotenv-safe works.
 
 
 ## How
 
-This package will find your application's local.settings.example.json and verify that the environment variables are present in `process.env`. If any environment variables are missing, a descriptive error will be thrown telling you which environment variables are missing.
+This package will find your application's local.settings.example.json and verify that the environment variables in your app. If any environment variables are missing, a descriptive error will be thrown telling you which environment variables are missing.
 
 
 ## Usage
@@ -28,11 +28,13 @@ local.settings.json
 local.settings.example.json
 ```
 
-In `my-func/index.js` at the very top of the file add this code. This will find the the `local.settings.example.json` in your project and assert that the environment variables exist.
+In `my-func/index.js` add this code to the very top of the file: 
 
 ```javascript
 require('azure-env-safe/config');
 ```
+
+This will find the the `local.settings.example.json` in your project and assert that the environment variables exist.
 
 ## Config
 
@@ -40,21 +42,20 @@ You can pass additional options to configure this library.
 
 ```javascript
 require('azure-env-safe').config({
-    allowEmptyValues: true,
-    example: './.my-env-example-filename'
+    path: './my-custom-settings.json',
+    example: './.my-env-example-filename.json'
 });
 ```
 
-### allowEmptyValues
+### path
 
-Default: `false`
+Default: `local.settings.json`.
 
-
-If set to true, then empty values are allowed, otherwise all values in `local.settings.example.json` are required.
+Path to your local settings json file. This will add environment variables from your local setting (azure function core utils already does this), but this may be useful when setting up tests. If this file does not exist, an error will not be thrown so that it may be used in production without a local.settings.json file.
 
 
 ### example
 
-Default: `local.settings.example`.
+Default: `local.settings.example.json`.
 
 Path to the example json file. 
