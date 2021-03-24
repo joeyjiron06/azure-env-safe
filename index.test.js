@@ -6,6 +6,13 @@ describe('config', () => {
   let config;
   beforeEach(() => {
     jest.resetModules();
+
+    jest.mock('./local.settings.json', () => {
+      const error = new Error('mock module not found');
+      error.moduleName = './local.settings.json';
+      error.code = 'MODULE_NOT_FOUND';
+      throw error;
+    });
     process.env = {};
 
     config = require('./index').config;
@@ -74,17 +81,160 @@ describe('config', () => {
     });
   });
 
-  it.skip('should NOT set environment variables when env variables already exist', async () => {});
+  it('should NOT set environment variables when env variables already exist', async () => {
+    jest.mock(LOCAL_SETTINGS_PATH, () => ({
+      Values: {
+        var9: 'actualVar9',
+        var10: 'actualVar10',
+        var11: 'actualVar11',
+      },
+    }));
 
-  it.skip('should not throw an error when path to default local.settings.json does not exist', async () => {});
+    jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({
+      Values: {
+        var9: 'exampleVar6',
+        var10: 'exampleVar7',
+        var11: 'exampleVar8',
+      },
+    }));
 
-  it.skip('should throw an error when path to custom local.settings.json does not exist', async () => {});
+    process.env = {
+      var9: 'alreadyExistingVar9',
+      var10: 'alreadyExistingVar10',
+    };
 
-  it.skip('should throw an error when local.settings.json is not a json object', async () => {});
-  it.skip('should throw an error when local.settings.json "Values" is undefined', async () => {});
-  it.skip('should throw an error when local.settings.json "Values" is null', async () => {});
-  it.skip('should throw an error when local.settings.json "Values" is not an object', async () => {});
-  it.skip('should throw an error when local.settings.json "Values" has values that are not strings', async () => {});
+    expect(() => config()).not.toThrow();
+    expect(process.env).toEqual({
+      var9: 'alreadyExistingVar9',
+      var10: 'alreadyExistingVar10',
+      var11: 'actualVar11',
+    });
+  });
+
+  it('should not throw an error when path to default local.settings.json does not exist', async () => {
+    jest.mock('./local.settings.json', () => {
+      const error = new Error('mock module not found');
+      error.moduleName = './local.settings.json';
+      error.code = 'MODULE_NOT_FOUND';
+      throw error;
+    });
+
+    jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({
+      Values: {
+        var9: 'exampleVar6',
+        var10: 'exampleVar7',
+        var11: 'exampleVar8',
+      },
+    }));
+
+    process.env = {
+      var9: 'actualVar6',
+      var10: 'actualVar7',
+      var11: 'actualVar8',
+    };
+
+    expect(() => config()).not.toThrow();
+  });
+
+  it('should throw an error when local.settings.json is not a json object', async () => {
+    const path = './local.settings.invalid.json';
+    expect(() => config({
+      path,
+    })).toThrow(
+      `Local settings file ${path} must be a JSON object.\n`
+    + 'Error message: Unexpected token i in JSON at position 0',
+    );
+  });
+
+  it('should throw an error when local.settings.json "Values" is undefined', async () => {
+    jest.mock(LOCAL_SETTINGS_PATH, () => ({
+      Values: undefined,
+    }));
+
+    jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({
+      Values: {
+        var9: 'exampleVar6',
+        var10: 'exampleVar7',
+        var11: 'exampleVar8',
+      },
+    }));
+
+    process.env = {
+      var9: 'alreadyExistingVar9',
+      var10: 'alreadyExistingVar10',
+    };
+
+    expect(() => config()).toThrow('Local settings json must contain a "Values" object but received:\nundefined');
+  });
+
+  it('should throw an error when local.settings.json "Values" is null', async () => {
+    jest.mock(LOCAL_SETTINGS_PATH, () => ({
+      Values: null,
+    }));
+
+    jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({
+      Values: {
+        var9: 'exampleVar6',
+        var10: 'exampleVar7',
+        var11: 'exampleVar8',
+      },
+    }));
+
+    process.env = {
+      var9: 'alreadyExistingVar9',
+      var10: 'alreadyExistingVar10',
+    };
+
+    expect(() => config()).toThrow('Local settings json must contain a "Values" object but received:\nnull');
+  });
+
+  it('should throw an error when local.settings.json "Values" is not an object', async () => {
+    jest.mock(LOCAL_SETTINGS_PATH, () => ({
+      Values: 1234, // should be an object
+    }));
+
+    jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({
+      Values: {
+        var9: 'exampleVar6',
+        var10: 'exampleVar7',
+        var11: 'exampleVar8',
+      },
+    }));
+
+    process.env = {
+      var9: 'alreadyExistingVar9',
+      var10: 'alreadyExistingVar10',
+    };
+
+    expect(() => config()).toThrow('Local settings json must contain a "Values" object but received:\n1234');
+  });
+
+  it('should throw an error when local.settings.json "Values" has values that are not strings', async () => {
+    jest.mock(LOCAL_SETTINGS_PATH, () => ({
+      Values: {
+        var1: '1',
+        var2: 1234, // should be a string
+      },
+    }));
+
+    jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({
+      Values: {
+        var9: 'exampleVar6',
+        var10: 'exampleVar7',
+        var11: 'exampleVar8',
+      },
+    }));
+
+    process.env = {
+      var9: 'alreadyExistingVar9',
+      var10: 'alreadyExistingVar10',
+    };
+
+    expect(() => config()).toThrow(`Local settings json "Values" must only have values which are strings but received:\n${JSON.stringify({
+      var1: '1',
+      var2: 1234,
+    }, null, 2)}`);
+  });
 
   it('should throw an error when environment variables are missing', async () => {
     jest.mock(LOCAL_SETTINGS_EXAMPLE_PATH, () => ({

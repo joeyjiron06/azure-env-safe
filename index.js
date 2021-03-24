@@ -28,11 +28,14 @@ function getExample(pathToExampleSettings) {
   }
 }
 
-function getLocalSettings() {
+function getLocalSettings(pathToLocalSettings) {
   try {
-    const pathToLocalSettings = path.resolve(process.cwd(), 'local.settings.json');
     return require(pathToLocalSettings);
   } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new MissingEnvVarsError(`Local settings file ${pathToLocalSettings} must be a JSON object.\nError message: ${error.message}`);
+    }
+
     return undefined;
   }
 }
@@ -42,6 +45,7 @@ function getLocalSettings() {
  *
  * @param {object} options
  * @param {string} options.example - path to the example file
+ * @param {string} options.path - path to the local.settings.json file to load environment variables
  */
 function config(options = {}) {
   const debug = (...args) => options.debug && console.debug(...args);
@@ -49,19 +53,33 @@ function config(options = {}) {
   debug('process.env before anything', process.env);
 
   const example = options.example || './local.settings.example.json';
+  const localSettingsPath = options.path || path.resolve(process.cwd(), 'local.settings.json');
+
   const exampleJSON = getExample(example);
-  const localSettings = getLocalSettings();
+  const localSettings = getLocalSettings(localSettingsPath, debug);
   const missingVars = [];
 
   if (!exampleJSON.Values || typeof exampleJSON.Values !== 'object') {
     throw new MissingEnvVarsError(`Example json must contain a "Values" object but received:\n${exampleJSON.Values}`);
   }
 
-  debug('found localSettings', localSettings);
+  if (localSettings) {
+    debug('found localSettings', localSettings);
 
-  Object.keys(localSettings.Values).forEach((key) => {
-    process.env[key] = localSettings.Values[key];
-  });
+    if (!localSettings.Values || typeof localSettings.Values !== 'object') {
+      throw new MissingEnvVarsError(`Local settings json must contain a "Values" object but received:\n${localSettings.Values}`);
+    }
+
+    Object.keys(localSettings.Values).forEach((key) => {
+      if (typeof localSettings.Values[key] !== 'string') {
+        throw new MissingEnvVarsError(`Local settings json "Values" must only have values which are strings but received:\n${JSON.stringify(localSettings.Values, null, 2)}`);
+      }
+
+      if (!process.env[key]) {
+        process.env[key] = localSettings.Values[key];
+      }
+    });
+  }
 
   debug('process.env after localSettings loaded', process.env);
 
