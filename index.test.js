@@ -1,4 +1,6 @@
 /* eslint-disable global-require */
+const path = require('path');
+
 const LOCAL_SETTINGS_EXAMPLE_PATH = './local.settings.example.json';
 const LOCAL_SETTINGS_PATH = './local.settings.json';
 
@@ -137,11 +139,11 @@ describe('config', () => {
   });
 
   it('should throw an error when local.settings.json is not a json object', async () => {
-    const path = './local.settings.invalid.json';
+    const pathToSettings = './local.settings.invalid.json';
     expect(() => config({
-      path,
+      path: pathToSettings,
     })).toThrow(
-      `Local settings file ${path} must be a JSON object.\n`
+      `Settings file at ${pathToSettings} must be a JSON object.\n`
     + 'Error message: Unexpected token i in JSON at position 0',
     );
   });
@@ -164,7 +166,7 @@ describe('config', () => {
       var10: 'alreadyExistingVar10',
     };
 
-    expect(() => config()).toThrow('Local settings json must contain a "Values" object but received:\nundefined');
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_PATH)} must contain a "Values" object but received:\nundefined`);
   });
 
   it('should throw an error when local.settings.json "Values" is null', async () => {
@@ -185,7 +187,7 @@ describe('config', () => {
       var10: 'alreadyExistingVar10',
     };
 
-    expect(() => config()).toThrow('Local settings json must contain a "Values" object but received:\nnull');
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_PATH)} must contain a "Values" object but received:\nnull`);
   });
 
   it('should throw an error when local.settings.json "Values" is not an object', async () => {
@@ -206,7 +208,7 @@ describe('config', () => {
       var10: 'alreadyExistingVar10',
     };
 
-    expect(() => config()).toThrow('Local settings json must contain a "Values" object but received:\n1234');
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_PATH)} must contain a "Values" object but received:\n1234`);
   });
 
   it('should throw an error when local.settings.json "Values" has values that are not strings', async () => {
@@ -230,7 +232,7 @@ describe('config', () => {
       var10: 'alreadyExistingVar10',
     };
 
-    expect(() => config()).toThrow(`Local settings json "Values" must only have values which are strings but received:\n${JSON.stringify({
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_PATH)} "Values" must only have values which are strings but received:\n${JSON.stringify({
       var1: '1',
       var2: 1234,
     }, null, 2)}`);
@@ -262,13 +264,13 @@ describe('config', () => {
       throw error;
     });
 
-    expect(() => config()).toThrow(new RegExp('Example file does not exist. Make sure that the example file exist at location .* or that you specified the correct example path.'));
+    expect(() => config()).toThrow(new RegExp('Settings file does not exist. Make sure that the settings file exist at location .* or that you specified the correct path.'));
   });
 
   it('should throw an error when custom example file does not exist', async () => {
     expect(() => config({
       example: './someFileThatDoesNotExist.js',
-    })).toThrow(new RegExp('Example file does not exist. Make sure that the example file exist at location .* or that you specified the correct example path.'));
+    })).toThrow(new RegExp('Settings file does not exist. Make sure that the settings file exist at location .* or that you specified the correct path.'));
   });
 
   it('should throw an error when example json is not a json object', async () => {
@@ -276,7 +278,7 @@ describe('config', () => {
     expect(() => config({
       example,
     })).toThrow(
-      `Example file ${example} must be a JSON object.\n`
+      `Settings file at ${example} must be a JSON object.\n`
     + 'Error message: Unexpected token i in JSON at position 0',
     );
   });
@@ -296,7 +298,7 @@ describe('config', () => {
       var5: 'actualVar5',
     };
 
-    expect(() => config()).toThrow('Example json must contain a "Values" object but received:\nundefined');
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_EXAMPLE_PATH)} must contain a "Values" object but received:\nundefined`);
   });
 
   it('should throw an error when example json "Values" is null', async () => {
@@ -310,7 +312,7 @@ describe('config', () => {
       var5: 'actualVar5',
     };
 
-    expect(() => config()).toThrow('Example json must contain a "Values" object but received:\nnull');
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_EXAMPLE_PATH)} must contain a "Values" object but received:\nnull`);
   });
 
   it('should throw an error when example json "Values" is not an object', async () => {
@@ -324,7 +326,7 @@ describe('config', () => {
       var5: 'actualVar5',
     };
 
-    expect(() => config()).toThrow('Example json must contain a "Values" object but received:\n1234');
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_EXAMPLE_PATH)} must contain a "Values" object but received:\n1234`);
   });
 
   it('should throw an error when example json has values that are not strings', async () => {
@@ -340,7 +342,7 @@ describe('config', () => {
       var2: 'actualVar4',
     };
 
-    expect(() => config()).toThrow(`Example json "Values" must only have values which are strings but received:\n${JSON.stringify({
+    expect(() => config()).toThrow(`Settings json at ${path.resolve(LOCAL_SETTINGS_EXAMPLE_PATH)} "Values" must only have values which are strings but received:\n${JSON.stringify({
       var1: 'exampleVar1',
       var2: 1234, // should not be a number and should throw an error
     }, null, 2)}`);
