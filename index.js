@@ -12,7 +12,7 @@ class MissingEnvVarsError extends Error {
   }
 }
 
-function getSettings(pathToSettings, errorIfNotFound = true) {
+function getSettings(pathToSettings) {
   try {
     const settings = require(pathToSettings);
 
@@ -29,11 +29,7 @@ function getSettings(pathToSettings, errorIfNotFound = true) {
     return settings;
   } catch (error) {
     if (error.code === 'MODULE_NOT_FOUND') {
-      if (errorIfNotFound) {
-        throw new MissingEnvVarsError(`Settings file does not exist. Make sure that the settings file exist at location ${error.moduleName} or that you specified the correct path.`);
-      } else {
-        return undefined;
-      }
+      throw new MissingEnvVarsError(`Settings file does not exist. Make sure that the settings file exist at location ${error.moduleName} or that you specified the correct path.`);
     }
 
     if (error instanceof SyntaxError) {
@@ -53,16 +49,7 @@ function getSettings(pathToSettings, errorIfNotFound = true) {
  */
 function config(options = {}) {
   const exampleSettings = getSettings(options.example || path.resolve(process.cwd(), 'local.settings.example.json'));
-  const localSettings = getSettings(options.path || path.resolve(process.cwd(), 'local.settings.json'), false);
   const missingVars = [];
-
-  if (localSettings) {
-    Object.keys(localSettings.Values).forEach((key) => {
-      if (!process.env[key]) {
-        process.env[key] = localSettings.Values[key];
-      }
-    });
-  }
 
   Object.keys(exampleSettings.Values).forEach((key) => {
     if (!process.env[key]) {

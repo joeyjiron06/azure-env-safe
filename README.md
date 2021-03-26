@@ -42,17 +42,9 @@ You can pass additional options to configure this library.
 
 ```javascript
 require('azure-env-safe').config({
-    path: './my-custom-settings.json',
     example: './.my-env-example-filename.json'
 });
 ```
-
-### path
-
-Default: `local.settings.json`.
-
-Path to your local settings json file. This will add environment variables from your local setting (azure function core utils already does this), but this may be useful when setting up tests. If this file does not exist, an error will not be thrown so that it may be used in production without a local.settings.json file.
-
 
 ### example
 
