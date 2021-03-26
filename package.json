@@ -1,6 +1,6 @@
 {
   "name": "azure-env-safe",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "dotenv-safe for azure functions",
   "main": "index.js",
   "files": [
